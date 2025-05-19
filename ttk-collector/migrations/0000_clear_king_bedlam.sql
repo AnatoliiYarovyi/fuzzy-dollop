@@ -1,0 +1,20 @@
+CREATE TABLE "tiktok_events" (
+	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "tiktok_events_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
+	"event_id" varchar,
+	"timestamp" timestamp,
+	"funnel_stage" varchar,
+	"event_type" varchar,
+	"user_id" varchar,
+	"username" varchar,
+	"followers" integer,
+	"device" varchar,
+	"country" varchar,
+	"video_id" varchar,
+	"action_time" varchar,
+	"profile_id" varchar,
+	"purchased_item" varchar,
+	"purchase_amount" numeric,
+	"watch_time" integer,
+	"percentage_watched" integer,
+	"created_at" timestamp DEFAULT now()
+);

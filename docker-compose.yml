@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - '3000:3000'
+    environment:
+      - NATS_URL=nats://nats:4222
+    depends_on:
+      - nats
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  fb-collector:
+    build:
+      context: ./fb-collector
+    container_name: fb-collector
+    ports:
+      - '3002:3002'
+    depends_on:
+      - nats
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3002/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ttk-collector:
+    build:
+      context: ./ttk-collector
+    container_name: ttk-collector
+    ports:
+      - '3003:3003'
+    depends_on:
+      - nats
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3003/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  reporter:
+    build:
+      context: ./reporter
+    container_name: reporter
+    ports:
+      - '3004:3004'
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/event_platform
+    depends_on:
+      - postgres
+      # - fb-collector
+      # - ttk-collector
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3004/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:latest
+    ports:
+      - '4222:4222' # NATS TCP
+      - '8222:8222' # Monitoring (optional)
+
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: event_platform
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  event-publisher:
+    image: andriiuni/events:latest
+    container_name: event-publisher
+    environment:
+      EVENT_ENDPOINT: ${EVENT_ENDPOINT}
+    depends_on:
+      - gateway
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - '9090:9090'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - '3001:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  prometheus_data:
+  grafana_data:
