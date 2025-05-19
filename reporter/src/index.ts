@@ -15,8 +15,8 @@ import { CtrlReports } from './controllers/ctrlReports';
 
 (async () => {
 	const {
-		// DATABASE_URL = 'postgres://postgres:postgres@postgres:5432/event_platform',
-		DATABASE_URL = 'postgres://postgres:postgres@postgres.event-platform.orb.local:5432/event_platform',
+		DATABASE_URL = 'postgres://postgres:postgres@postgres:5432/event_platform',
+		// DATABASE_URL = 'postgres://postgres:postgres@postgres.event-platform.orb.local:5432/event_platform',
 		PORT = 3004,
 	} = process.env;
 	try {
